@@ -85,28 +85,17 @@ class Bird:
 
 
 class Beam:
-    """
-    こうかとんが放つビームに関するクラス
-    """
-    def イニシャライザ(self, bird:"Bird"):
-        """
-        ビーム画像Surfaceを生成する
-        引数 bird：ビームを放つこうかとん（Birdインスタンス）
-        """
-        self.img = pg.image.load(f"fig/beam.png")
+    def __init__(self, bird: Bird):
+        self.img = pg.image.load("fig/beam.png")
         self.rct = self.img.get_rect()
         self.rct.center = bird.rct.center
         self.rct.left = bird.rct.right
-        self.vx, self.vy = +5, 0
+        self.vx, self.vy = 5, 0
 
-    def update(self, screen: pg.Surface):
-        """
-        ビームを速度ベクトルself.vx, self.vyに基づき移動させる
-        引数 screen：画面Surface
-        """
+    def update(self, screen):
+        self.rct.move_ip(self.vx, self.vy)
         if check_bound(self.rct) == (True, True):
-            self.rct.move_ip(self.vx, self.vy)
-            screen.blit(self.img, self.rct)    
+            screen.blit(self.img, self.rct) 
 
 
 class Bomb:
@@ -155,7 +144,9 @@ def main():
                 return
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
                 # スペースキー押下でBeamクラスのインスタンス生成
-                beam = Beam(bird)            
+                beam = Beam(bird)    
+            if beam is not None:
+                beam.update(screen)        
         screen.blit(bg_img, [0, 0])
         
         if bird.rct.colliderect(bomb.rct):
@@ -167,7 +158,8 @@ def main():
 
         key_lst = pg.key.get_pressed()
         bird.update(key_lst, screen)
-        beam.update(screen)   
+        if beam is not None:
+            beam.update(screen)   
         bomb.update(screen)
         pg.display.update()
         tmr += 1
