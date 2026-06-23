@@ -151,6 +151,10 @@ def main():
         if bomb is not None:
             if beam is not None:
                 if beam.rct.colliderect(bomb.rct):
+                    bird.change_img(6, screen)  # 喜び画像
+                    pg.display.update()
+                    time.sleep(0.2)
+
                     bomb = None
                     beam = None
         
