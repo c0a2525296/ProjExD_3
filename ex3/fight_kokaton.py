@@ -147,11 +147,7 @@ class Score:
         self.color = (0, 0, 255)
         self.value = 0
 
-        self.img = self.fonto.render(
-            f"Score: {self.value}",
-            True,
-            self.color
-        )
+        self.img = self.fonto.render(f"Score: {self.value}",True,self.color)
 
         self.rct = self.img.get_rect()
         self.rct.center = (100, HEIGHT-50)
