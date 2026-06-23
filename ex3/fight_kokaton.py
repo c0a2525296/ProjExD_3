@@ -3,7 +3,7 @@ import random
 import sys
 import time
 import pygame as pg
-
+import math
 
 WIDTH = 1100  # ゲームウィンドウの幅
 HEIGHT = 650  # ゲームウィンドウの高さ
@@ -56,7 +56,7 @@ class Bird:
         self.img = __class__.imgs[(+5, 0)]
         self.rct: pg.Rect = self.img.get_rect()
         self.rct.center = xy
-
+        self.dire = (+5, 0)  
     def change_img(self, num: int, screen: pg.Surface):
         """
         こうかとん画像を切り替え，画面に転送する
@@ -82,16 +82,22 @@ class Bird:
             self.rct.move_ip(-sum_mv[0], -sum_mv[1])
         if not (sum_mv[0] == 0 and sum_mv[1] == 0):
             self.img = __class__.imgs[tuple(sum_mv)]
+            self.dire = tuple(sum_mv)
         screen.blit(self.img, self.rct)
 
 
 class Beam:
     def __init__(self, bird: Bird):
-        self.img = pg.image.load("fig/beam.png")
+        self.vx, self.vy = bird.dire
+        
+        angle = math.degrees(math.atan2(-self.vy, self.vx))
+
+        self.img = pg.transform.rotozoom(pg.image.load("fig/beam.png"), angle, 1.0)
         self.rct = self.img.get_rect()
+        
         self.rct.center = bird.rct.center
-        self.rct.left = bird.rct.right
-        self.vx, self.vy = 5, 0
+        self.rct.centerx += bird.rct.width * self.vx / 5
+        self.rct.centery += bird.rct.height * self.vy / 5
 
     def update(self, screen):
         self.rct.move_ip(self.vx, self.vy)
@@ -157,6 +163,22 @@ class Score:
             self.color
         )
         screen.blit(self.img, self.rct)
+class Explosion:
+    """
+    爆発エフェクトに関するクラス
+    """
+    def __init__(self, obj):
+        img = pg.image.load("fig/explosion.gif")
+        self.imgs = [
+            img,
+            pg.transform.flip(img, True, False)
+        ]
+        self.rct = self.imgs[0].get_rect(center=obj.rct.center)
+        self.life = 20
+
+    def update(self, screen):
+        self.life -= 1
+        screen.blit(self.imgs[self.life//10 % 2], self.rct)
 
 
 def main():
@@ -174,6 +196,9 @@ def main():
     fonto = pg.font.Font(None, 80)
 
     clock = pg.time.Clock()
+
+    explosions = []
+
     tmr = 0
 
     while True:
@@ -195,6 +220,7 @@ def main():
                     bird.change_img(6, screen)  # 喜びエフェクト
                     pg.display.update()
                     time.sleep(0.2)
+                    explosions.append(Explosion(bomb))
                     bombs[i] = None
                     beams[j] = None
                     score.value += 1
@@ -203,6 +229,7 @@ def main():
         bombs = [bomb for bomb in bombs if bomb is not None]
         beams = [beam for beam in beams if beam is not None]
         beams = [beam for beam in beams if beam.is_alive()]
+        explosions = [ex for ex in explosions if ex.life > 0]
         for bomb in bombs:
             if bird.rct.colliderect(bomb.rct):
                 bird.change_img(8, screen)
@@ -225,6 +252,9 @@ def main():
 
         for bomb in bombs:
             bomb.update(screen)
+
+        for ex in explosions:
+            ex.update(screen)
         score.update(screen)
 
         pg.display.update()
