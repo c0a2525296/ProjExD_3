@@ -96,7 +96,10 @@ class Beam:
     def update(self, screen):
         self.rct.move_ip(self.vx, self.vy)
         if check_bound(self.rct) == (True, True):
-            screen.blit(self.img, self.rct) 
+            screen.blit(self.img, self.rct)
+
+    def is_alive(self):
+        return check_bound(self.rct) == (True, True)
 
 
 class Bomb:
@@ -166,7 +169,7 @@ def main():
 
     bombs = [Bomb((255, 0, 0), 10) for _ in range(NUM_OF_BOMBS)]
 
-    beam = None
+    beams = []
 
     fonto = pg.font.Font(None, 80)
 
@@ -179,30 +182,30 @@ def main():
                 return
 
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
-                beam = Beam(bird)
+                beams.append(Beam(bird))
 
         screen.blit(bg_img, [0, 0])
 
         # ビームと爆弾の衝突
         for i, bomb in enumerate(bombs):
-            if beam is not None:
+            for j, beam in enumerate(beams):
+                if beam is None:
+                    continue
                 if beam.rct.colliderect(bomb.rct):
                     bird.change_img(6, screen)  # 喜びエフェクト
                     pg.display.update()
                     time.sleep(0.2)
-
                     bombs[i] = None
-                    beam = None
+                    beams[j] = None
                     score.value += 1
 
         # Noneの爆弾を除去
         bombs = [bomb for bomb in bombs if bomb is not None]
-
-        # こうかとんと爆弾の衝突
+        beams = [beam for beam in beams if beam is not None]
+        beams = [beam for beam in beams if beam.is_alive()]
         for bomb in bombs:
             if bird.rct.colliderect(bomb.rct):
                 bird.change_img(8, screen)
-
                 txt = fonto.render(
                     "Game Over",
                     True,
@@ -217,7 +220,7 @@ def main():
         key_lst = pg.key.get_pressed()
         bird.update(key_lst, screen)
 
-        if beam is not None:
+        for beam in beams:
             beam.update(screen)
 
         for bomb in bombs:
