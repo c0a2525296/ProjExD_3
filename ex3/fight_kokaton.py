@@ -7,6 +7,7 @@ import pygame as pg
 
 WIDTH = 1100  # ゲームウィンドウの幅
 HEIGHT = 650  # ゲームウィンドウの高さ
+NUM_OF_BOMBS = 5
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 
@@ -131,47 +132,71 @@ class Bomb:
 
 def main():
     pg.display.set_caption("たたかえ！こうかとん")
-    screen = pg.display.set_mode((WIDTH, HEIGHT))    
+    screen = pg.display.set_mode((WIDTH, HEIGHT))
     bg_img = pg.image.load("fig/pg_bg.jpg")
+
     bird = Bird((300, 200))
-    bomb = Bomb((255, 0, 0), 10)
-    beam = None  # ゲーム初期化時にはビームは存在しない
+
+    bombs = [Bomb((255, 0, 0), 10) for _ in range(NUM_OF_BOMBS)]
+
+    beam = None
+
+    fonto = pg.font.Font(None, 80)
+
     clock = pg.time.Clock()
     tmr = 0
+
     while True:
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 return
+
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
-                # スペースキー押下でBeamクラスのインスタンス生成
-                beam = Beam(bird)    
-            if beam is not None:
-                beam.update(screen)        
+                beam = Beam(bird)
+
         screen.blit(bg_img, [0, 0])
-        if bomb is not None:
+
+        # ビームと爆弾の衝突
+        for i, bomb in enumerate(bombs):
             if beam is not None:
                 if beam.rct.colliderect(bomb.rct):
-                    bird.change_img(6, screen)  # 喜び画像
+                    bird.change_img(6, screen)  # 喜びエフェクト
                     pg.display.update()
                     time.sleep(0.2)
 
-                    bomb = None
+                    bombs[i] = None
                     beam = None
-        
-        if bomb is not None:
+
+        # Noneの爆弾を除去
+        bombs = [bomb for bomb in bombs if bomb is not None]
+
+        # こうかとんと爆弾の衝突
+        for bomb in bombs:
             if bird.rct.colliderect(bomb.rct):
                 bird.change_img(8, screen)
+
+                txt = fonto.render(
+                    "Game Over",
+                    True,
+                    (255, 0, 0)
+                )
+                screen.blit(txt, [WIDTH//2-150, HEIGHT//2])
+
                 pg.display.update()
                 time.sleep(1)
                 return
 
         key_lst = pg.key.get_pressed()
         bird.update(key_lst, screen)
+
         if beam is not None:
-            beam.update(screen)   
-        if bomb is not None:
+            beam.update(screen)
+
+        for bomb in bombs:
             bomb.update(screen)
+
         pg.display.update()
+
         tmr += 1
         clock.tick(50)
 
