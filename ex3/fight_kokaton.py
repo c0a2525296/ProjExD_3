@@ -138,6 +138,7 @@ def main():
     beam = None  # ゲーム初期化時にはビームは存在しない
     clock = pg.time.Clock()
     tmr = 0
+    fonto = pg.font.Font(None, 80)
     while True:
         for event in pg.event.get():
             if event.type == pg.QUIT:
@@ -149,14 +150,16 @@ def main():
                 beam.update(screen)        
         screen.blit(bg_img, [0, 0])
         if bomb is not None:
-            if beam is not None:
-                if beam.rct.colliderect(bomb.rct):
-                    bird.change_img(6, screen)  # 喜び画像
-                    pg.display.update()
-                    time.sleep(0.2)
+            if bomb is not None:
+                if bird.rct.colliderect(bomb.rct):
+                    bird.change_img(8, screen)
 
-                    bomb = None
-                    beam = None
+                    txt = fonto.render("Game Over", True, (255, 0, 0))
+                    screen.blit(txt, [WIDTH//2-150, HEIGHT//2])
+
+                    pg.display.update()
+                    time.sleep(1)
+                    return
         
         if bomb is not None:
             if bird.rct.colliderect(bomb.rct):
